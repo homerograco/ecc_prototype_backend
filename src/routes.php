@@ -38,9 +38,4 @@ $app->put('/all/{id}', function ($request, $response, $args) {
     $table = R::findOne('ecc_codes', 'id=?', array($ecc_id));
     $table->code_question = $input['code_question'];
     R::store($table);
-    /*
-    $json = json_encode(array('results' => R::exportAll($table)));
-    $newResponse = $response->withHeader('Content-type', 'application/json');
-    $newResponse->getBody()->write($json);
-    return $newResponse;*/
 });
