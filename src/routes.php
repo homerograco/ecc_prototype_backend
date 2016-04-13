@@ -66,7 +66,7 @@ $app->get('/questions/[{id}/]', function ($request, $response, $args) {
  */
 $app->get('/questions_answers/[{code}/]', function ($request, $response, $args) {
     // Logging read of ECC codes table
-    $this->logger->info("Testing join of questions X answers");
+    $this->logger->info("Reading DBs of questions and answers into assoc. array and returning as JSON");
     
     if (isset($args['code'])) {
         $code = $args['code'];
