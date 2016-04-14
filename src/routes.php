@@ -66,21 +66,24 @@ $app->get('/questions/[{id}/]', function ($request, $response, $args) {
 /**
  * Combines databases of questions and answers into an associative array and returns it as json
  */
-$app->get('/questions_answers/[{code}/]', function ($request, $response, $args) {
+$app->get('/questions_answers/[{id}/]', function ($request, $response, $args) {
     // Logging read of ECC codes table
     $this->logger->info("Reading DBs of questions and answers into assoc. array and returning as JSON");
     
-    if (isset($args['code'])) {
-        $code = $args['code'];
-        $question = R::findOne('code_question', 'code=?', array($code));
-        $answers = R::find('code_answer', ' code LIKE ? ', [ $code ]);
+    if (isset($args['id'])) {
+        $id = $args['id'];
+        $question = R::findOne('code_question', 'id=?', array($id));
+        $code = $question->code;
+        $answers = R::find('code_answer', ' code=? ', array($code));
         $results = array();
         $array_pos = 0;
         
         foreach($answers as $answer) {
-            $results[$array_pos]['code_question'] = $question->code;
+            $results[$array_pos]['question_id'] = $question->id;
+            $results[$array_pos]['question_code'] = $question->code;
             $results[$array_pos]['question'] = $question->question;
             $results[$array_pos]['code_next'] = $answer->next;
+            $results[$array_pos]['answer_id'] = $answer->id;
             $results[$array_pos]['answer'] = $answer->answer;
             $array_pos++;
         }
@@ -94,9 +97,11 @@ $app->get('/questions_answers/[{code}/]', function ($request, $response, $args) 
         foreach($questions as $question) {
             foreach($answers as $answer) {
                 if($answer->code == $question->code) {
-                    $results[$array_pos]['code_question'] = $question->code;
+                    $results[$array_pos]['question_id'] = $question->id;
+                    $results[$array_pos]['question_code'] = $question->code;
                     $results[$array_pos]['question'] = $question->question;
                     $results[$array_pos]['code_next'] = $answer->next;
+                    $results[$array_pos]['answer_id'] = $answer->id;
                     $results[$array_pos]['answer'] = $answer->answer;
                     $array_pos++;
                 }
@@ -113,6 +118,9 @@ $app->get('/questions_answers/[{code}/]', function ($request, $response, $args) 
     return $newResponse;
 });
 
+/**
+ * OLD: Updates code question on old database, looking for its ID.
+ */
 $app->put('/all/{id}', function ($request, $response, $args) {
     // Logging update of ECC codes table
     $this->logger->info("Updating ECC code by id");
@@ -124,4 +132,32 @@ $app->put('/all/{id}', function ($request, $response, $args) {
     $table = R::findOne('ecc_codes', 'id=?', array($ecc_id));
     $table->code_question = $input['code_question'];
     R::store($table);
+});
+
+/*
+ * 
+ */
+$app->put('/questions_answers/[{id}/]', function ($request, $response, $args) {
+    // Logging update of ECC codes table
+    $this->logger->info("Updating ECC info by code");
+    
+    $input = $request->getParsedBody();
+        
+    $id = $args['id'];
+    
+    //Update current answer related code
+    $answer = R::find('code_answer', 'id=?', array($id));
+    $original_code = $answer->code;
+    $answer->code = $input['code_question'];
+    
+    //Create a copy of the current question, updating the code and text from imput
+    $original_question = R::findOne('code_question', 'code=?', array($original_code));
+    $question = R::dispense('code_question');
+    $question->code = $input['code_question'];
+    $question->question = $input['question'];
+    $question->help = $original_question->help;
+    $question->comment = $original_question->comment;
+    
+    R::store($question);
+    R::store($answer);
 });
