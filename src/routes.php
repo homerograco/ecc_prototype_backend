@@ -14,7 +14,9 @@ $app->get('/all/[{id}/]', function ($request, $response, $args) {
     } else {
         $table = R::find('ecc_codes');
     }
-    
+    //$test = array('results' => R::exportAll($table));
+    //print_r($test);
+
     $json = json_encode(array('results' => R::exportAll($table)));
     $newResponse = $response->withHeader('Content-type', 'application/json');
     $newResponse->getBody()->write($json);
@@ -73,24 +75,37 @@ $app->get('/questions_answers/[{code}/]', function ($request, $response, $args) 
         $question = R::findOne('code_question', 'code=?', array($code));
         $answers = R::find('code_answer', ' code LIKE ? ', [ $code ]);
         $results = array();
+        $array_pos = 0;
         
         foreach($answers as $answer) {
-            $results[$question->code][$question->question][] = array($answer->next => $answer->answer);
+            $results[$array_pos]['code_question'] = $question->code;
+            $results[$array_pos]['question'] = $question->question;
+            $results[$array_pos]['code_next'] = $answer->next;
+            $results[$array_pos]['answer'] = $answer->answer;
+            $array_pos++;
         }
         
     } else {
         $questions = R::find('code_question');
         $answers = R::find('code_answer');
         $results = array();
+        $array_pos = 0;
     
         foreach($questions as $question) {
             foreach($answers as $answer) {
                 if($answer->code == $question->code) {
-                    $results[$question->code][$question->question][] = array($answer->next => $answer->answer);
+                    $results[$array_pos]['code_question'] = $question->code;
+                    $results[$array_pos]['question'] = $question->question;
+                    $results[$array_pos]['code_next'] = $answer->next;
+                    $results[$array_pos]['answer'] = $answer->answer;
+                    $array_pos++;
                 }
             }
         }
     }
+
+    //$test = array('results' => $results);
+    //print_r($test);
 
     $json = json_encode(array('results' => $results));
     $newResponse = $response->withHeader('Content-type', 'application/json');
