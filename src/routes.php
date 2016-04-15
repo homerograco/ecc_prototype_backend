@@ -134,30 +134,41 @@ $app->put('/all/{id}', function ($request, $response, $args) {
     R::store($table);
 });
 
-/*
- * 
+/**
+ * Stores updates on a question entry
  */
-$app->put('/questions_answers/[{id}/]', function ($request, $response, $args) {
+$app->put('/questions/[{id}/]', function ($request, $response, $args) {
     // Logging update of ECC codes table
-    $this->logger->info("Updating ECC info by code");
+    $this->logger->info("Storing updates in question {id}");
     
     $input = $request->getParsedBody();
         
-    $id = $args['id'];
+    $question_id = $args['id'];
     
-    //Update current answer related code
-    $answer = R::find('code_answer', 'id=?', array($id));
-    $original_code = $answer->code;
-    $answer->code = $input['code_question'];
+    $table = R::findOne('code_question', 'id=?', array($question_id));
+    $table->code = $input['question_code'];
+    $table->question = $input['question'];
+    $table->help = $input['help'];
+    $table->comment = $input['comment'];
     
-    //Create a copy of the current question, updating the code and text from imput
-    $original_question = R::findOne('code_question', 'code=?', array($original_code));
-    $question = R::dispense('code_question');
-    $question->code = $input['code_question'];
-    $question->question = $input['question'];
-    $question->help = $original_question->help;
-    $question->comment = $original_question->comment;
+    R::store($table);
+});
+
+/**
+ * Stores updates on an answer entry
+ */
+$app->put('/answers/[{id}/]', function ($request, $response, $args) {
+    // Logging update of ECC codes table
+    $this->logger->info("Storing updates in answer {id}");
     
-    R::store($question);
-    R::store($answer);
+    $input = $request->getParsedBody();
+        
+    $answer_id = $args['id'];
+    
+    $table = R::findOne('code_answer', 'id=?', array($answer_id));
+    $table->code = $input['answer_code'];
+    $table->answer = $input['answer'];
+    $table->next = $input['code_next'];
+    
+    R::store($table);
 });
