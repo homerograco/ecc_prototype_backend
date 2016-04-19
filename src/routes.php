@@ -137,7 +137,7 @@ $app->put('/all/{id}', function ($request, $response, $args) {
 /**
  * Stores updates on a question entry
  */
-$app->put('/questions/[{id}/]', function ($request, $response, $args) {
+$app->put('/questions/[{id}]', function ($request, $response, $args) {
     // Logging update of ECC codes table
     $this->logger->info("Storing updates in question {id}");
     
@@ -146,7 +146,7 @@ $app->put('/questions/[{id}/]', function ($request, $response, $args) {
     $question_id = $args['id'];
     
     $table = R::findOne('code_question', 'id=?', array($question_id));
-    $table->code = $input['question_code'];
+    $table->code = $input['code'];
     $table->question = $input['question'];
     $table->help = $input['help'];
     $table->comment = $input['comment'];
@@ -157,7 +157,7 @@ $app->put('/questions/[{id}/]', function ($request, $response, $args) {
 /**
  * Stores updates on an answer entry
  */
-$app->put('/answers/[{id}/]', function ($request, $response, $args) {
+$app->put('/answers/[{id}]', function ($request, $response, $args) {
     // Logging update of ECC codes table
     $this->logger->info("Storing updates in answer {id}");
     
