@@ -32,9 +32,9 @@ $app->get('/answers/[{id}/]', function ($request, $response, $args) {
     
     if (isset($args['id'])) {
         $ecc_id = $args['id'];
-        $table = R::findOne('code_answer', 'id=?', array($ecc_id));
+        $table = R::findOne('answers', 'id=?', array($ecc_id));
     } else {
-        $table = R::find('code_answer');
+        $table = R::find('answers');
     }
     
     $json = json_encode(array('results' => R::exportAll($table)));
@@ -52,9 +52,9 @@ $app->get('/questions/[{id}/]', function ($request, $response, $args) {
     
     if (isset($args['id'])) {
         $ecc_id = $args['id'];
-        $table = R::findOne('code_question', 'id=?', array($ecc_id));
+        $table = R::findOne('questions', 'id=?', array($ecc_id));
     } else {
-        $table = R::find('code_question');
+        $table = R::find('questions');
     }
     
     $json = json_encode(array('results' => R::exportAll($table)));
@@ -72,9 +72,9 @@ $app->get('/questions_answers/[{id}/]', function ($request, $response, $args) {
     
     if (isset($args['id'])) {
         $id = $args['id'];
-        $question = R::findOne('code_question', 'id=?', array($id));
+        $question = R::findOne('questions', 'id=?', array($id));
         $code = $question->code;
-        $answers = R::find('code_answer', ' code=? ', array($code));
+        $answers = R::find('answers', ' code=? ', array($code));
         $results = array();
         $array_pos = 0;
         
@@ -89,8 +89,8 @@ $app->get('/questions_answers/[{id}/]', function ($request, $response, $args) {
         }
         
     } else {
-        $questions = R::find('code_question');
-        $answers = R::find('code_answer');
+        $questions = R::find('questions');
+        $answers = R::find('answers');
         $results = array();
         $array_pos = 0;
     
@@ -130,7 +130,7 @@ $app->put('/all/{id}', function ($request, $response, $args) {
     $ecc_id = $args['id'];
     
     $table = R::findOne('ecc_codes', 'id=?', array($ecc_id));
-    $table->code_question = $input['code_question'];
+    $table->questions = $input['questions'];
     R::store($table);
 });
 
@@ -145,7 +145,7 @@ $app->put('/questions/[{id}]', function ($request, $response, $args) {
         
     $question_id = $args['id'];
     
-    $table = R::findOne('code_question', 'id=?', array($question_id));
+    $table = R::findOne('questions', 'id=?', array($question_id));
     $table->code = $input['code'];
     $table->question = $input['question'];
     $table->help = $input['help'];
@@ -165,10 +165,53 @@ $app->put('/answers/[{id}]', function ($request, $response, $args) {
         
     $answer_id = $args['id'];
     
-    $table = R::findOne('code_answer', 'id=?', array($answer_id));
+    $table = R::findOne('answers', 'id=?', array($answer_id));
     $table->code = $input['answer_code'];
     $table->answer = $input['answer'];
     $table->next = $input['code_next'];
     
     R::store($table);
+});
+
+/**
+ * Inserts questions into the database
+ */
+$app->post('/questions/[{id}/]', function ($request, $response, $args) {
+    // Logging insertion into questions table
+    $this->logger->info("Inserting new question");
+    
+    $input = $request->getParsedBody();
+    $question = R::dispense('questions'); //dispense only works with char-lowercase based names, no special simbols, no uppercase, no numbers!
+    
+    $question->code = $input['code'];
+    $question->question = $input['question'];
+    $question->help = $input['help'];
+    $question->comment = $input['comment'];
+    
+    $id = R::store($question);
+    
+    $newResponse = $response->withHeader('Content-type', 'application/text');
+    $newResponse->getBody()->write('The database returned the following ID: '.$id);
+    return $newResponse;
+});
+
+/**
+ * Inserts answers into the database
+ */
+$app->post('/answers/[{id}/]', function ($request, $response, $args) {
+    // Logging insertion into answers table
+    $this->logger->info("Inserting new answer");
+    
+    $input = $request->getParsedBody();
+    $answer = R::dispense('answers'); //dispense only works with char-lowercase based names, no special simbols, no uppercase, no numbers!
+    
+    $answer->code = $input['code'];
+    $answer->next = $input['next'];
+    $answer->answer = $input['answer'];
+    
+    $id = R::store($answer);
+    
+    $newResponse = $response->withHeader('Content-type', 'application/text');
+    $newResponse->getBody()->write('The database returned the following ID: '.$id);
+    return $newResponse;
 });
