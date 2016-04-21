@@ -176,7 +176,7 @@ $app->put('/answers/[{id}]', function ($request, $response, $args) {
 /**
  * Inserts questions into the database
  */
-$app->post('/questions/[{id}/]', function ($request, $response, $args) {
+$app->post('/questions/[{id}]', function ($request, $response, $args) {
     // Logging insertion into questions table
     $this->logger->info("Inserting new question");
     
@@ -198,7 +198,7 @@ $app->post('/questions/[{id}/]', function ($request, $response, $args) {
 /**
  * Inserts answers into the database
  */
-$app->post('/answers/[{id}/]', function ($request, $response, $args) {
+$app->post('/answers/[{id}]', function ($request, $response, $args) {
     // Logging insertion into answers table
     $this->logger->info("Inserting new answer");
     
@@ -214,4 +214,30 @@ $app->post('/answers/[{id}/]', function ($request, $response, $args) {
     $newResponse = $response->withHeader('Content-type', 'application/text');
     $newResponse->getBody()->write('The database returned the following ID: '.$id);
     return $newResponse;
+});
+
+/**
+ * Deletes questions from the database
+ */
+$app->delete('/questions/{id}', function ($request, $response, $args) {
+    // Logging deletion from questions table
+    $this->logger->info("Deleting a question {id}");
+        
+    $question_id = $args['id'];
+    
+    $question = R::findOne('questions', 'id=?', array($question_id));
+    R::trash($question);
+});
+
+/**
+ * Deletes answers from the database
+ */
+$app->delete('/answers/{id}', function ($request, $response, $args) {
+    // Logging deletion from answers table
+    $this->logger->info("Deleting an answer {id}");
+        
+    $answer_id = $args['id'];
+    
+    $answer = R::findOne('answers', 'id=?', array($answer_id));
+    R::trash($answer);
 });
