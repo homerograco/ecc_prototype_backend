@@ -166,9 +166,9 @@ $app->put('/answers/[{id}]', function ($request, $response, $args) {
     $answer_id = $args['id'];
     
     $table = R::findOne('answers', 'id=?', array($answer_id));
-    $table->code = $input['answer_code'];
+    $table->code = $input['code'];
     $table->answer = $input['answer'];
-    $table->next = $input['code_next'];
+    $table->next = $input['next'];
     
     R::store($table);
 });
