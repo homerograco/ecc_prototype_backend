@@ -1,27 +1,5 @@
 <?php
-// Routes
-
-/**
- * OLD: Reads database of ECC information into an associative array and returns it as json
- */
-$app->get('/all/[{id}/]', function ($request, $response, $args) {
-
-    $this->logger->info("Reading ECC codes");
-    
-    if (isset($args['id'])) {
-        $ecc_id = $args['id'];
-        $table = R::findOne('ecc_codes', 'id=?', array($ecc_id));
-    } else {
-        $table = R::find('ecc_codes');
-    }
-    //$test = array('results' => R::exportAll($table));
-    //print_r($test);
-
-    $json = json_encode(array('results' => R::exportAll($table)));
-    $newResponse = $response->withHeader('Content-type', 'application/json');
-    $newResponse->getBody()->write($json);
-    return $newResponse;
-});
+// GET
 
 /**
  * Reads database of answers into an associative array and returns it as json
@@ -109,31 +87,51 @@ $app->get('/questions_answers/[{id}/]', function ($request, $response, $args) {
         }
     }
 
-    //$test = array('results' => $results);
-    //print_r($test);
+    /*
+    $test = array('results' => $results);
+    print_r($test);
+     * 
+     */
+
 
     $json = json_encode(array('results' => $results));
     $newResponse = $response->withHeader('Content-type', 'application/json');
     $newResponse->getBody()->write($json);
     return $newResponse;
+
 });
 
 /**
- * OLD: Updates code question on old database, looking for its ID.
+ * The {code} used in this GET comes from the current question.
  */
-$app->put('/all/{id}', function ($request, $response, $args) {
-    // Logging update of ECC codes table
-    $this->logger->info("Updating ECC code by id");
+$app->get('/classificator/{code}', function ($request, $response, $args) {
+
+    $this->logger->info("Reading a question and all its related answers from the DB, and returning as JSON.");
     
-    $input = $request->getParsedBody();
-        
-    $ecc_id = $args['id'];
+    $question_code = $args['code'];
+    $question = R::findOne('questions', 'code=?', array($question_code));
+    $answers = R::findAll('answers', 'code=?', array($question_code));
     
-    $table = R::findOne('ecc_codes', 'id=?', array($ecc_id));
-    $table->questions = $input['questions'];
-    R::store($table);
+    $results = array();
+    $answer_count = 0;
+    $results[$answer_count]['question'] = $question->question;
+    $answer_count++;
+
+    foreach ($answers as $answer) {
+        $results[$answer_count]['answer_text'] = $answer->answer;
+        $results[$answer_count]['answer_next'] = $answer->next;
+        $answer_count++;
+    }
+    
+    //print_r($results);
+
+    $json = json_encode(array('results' => $results));
+    $newResponse = $response->withHeader('Content-type', 'application/json');
+    $newResponse->getBody()->write($json);
+    return $newResponse; 
 });
 
+// PUT
 /**
  * Stores updates on a question entry
  */
@@ -173,6 +171,7 @@ $app->put('/answers/[{id}]', function ($request, $response, $args) {
     R::store($table);
 });
 
+// POST
 /**
  * Inserts questions into the database
  */
@@ -216,6 +215,7 @@ $app->post('/answers/[{id}]', function ($request, $response, $args) {
     return $newResponse;
 });
 
+// DELETE
 /**
  * Deletes questions from the database
  */
